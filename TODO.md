@@ -1,0 +1,5 @@
+- [x] Edit public/index.html: Replace select with ul li for navigation, add mobile toggle button
+- [x] Edit public/style.css: Add styles for nav ul li, mobile dropdown behavior
+- [x] Edit public/app.js: Update event listeners for li clicks, add mobile nav toggle logic
+- [x] Test navigation on desktop and mobile
+- [x] Adjust styles if needed for better appearance

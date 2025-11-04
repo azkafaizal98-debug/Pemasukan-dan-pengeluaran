@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Pencatat Pemasukan & Pengeluaran</title>
+  <link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <div class="top-row" style="display: flex; justify-content: space-between; align-items: center;">
+        <h1>Pemasukan & Pengeluaran</h1>
+        <nav class="nav">
+          <select class="nav-select" id="nav-select">
+            <option value="home">Beranda</option>
+            <option value="monthly">Per Bulan</option>
+            <option value="budgets">Budget</option>
+            <option value="recurring">Berulang</option>
+            <option value="goals">Tabungan</option>
+            <option value="tags">Tag</option>
+            <option value="reports">Laporan</option>
+          </select>
+          <ul class="nav-list" id="nav-list">
+            <li><button class="nav-btn active" data-page="home">Beranda</button></li>
+            <li><button class="nav-btn" data-page="monthly">Per Bulan</button></li>
+            <li><button class="nav-btn" data-page="budgets">Budget</button></li>
+            <li><button class="nav-btn" data-page="recurring">Berulang</button></li>
+            <li><button class="nav-btn" data-page="goals">Tabungan</button></li>
+            <li><button class="nav-btn" data-page="tags">Tag</button></li>
+            <li><button class="nav-btn" data-page="reports">Laporan</button></li>
+          </ul>
+        </nav>
+      </div>
+      <p class="sub">Tampilan bersih & modern — dapat ekspor/import Excel</p>
+    </header>
+
+    <main>
+      <div id="pages">
+        <div id="page-home" class="page">
+      <section class="card form-card">
+        <h2>Tambah Entri</h2>
+        <form id="entry-form">
+          <div class="row">
+            <label>Jumlah (Rp)</label>
+            <input id="amount" type="number" step="0.01" required>
+          </div>
+          <div class="row">
+            <label>Tipe</label>
+            <div class="btn-group">
+              <button type="button" data-type="income" class="type-btn active">Pemasukan</button>
+              <button type="button" data-type="expense" class="type-btn">Pengeluaran</button>
+            </div>
+          </div>
+          <div class="row">
+            <label>Kategori</label>
+            <input id="category" type="text" placeholder="Contoh: Gaji, Makanan">
+          </div>
+          <div class="row">
+            <label>Tanggal</label>
+            <input id="date" type="date">
+          </div>
+          <div class="row">
+            <label>Catatan</label>
+            <input id="note" type="text" placeholder="Opsional">
+          </div>
+          <div class="row actions">
+            <button id="save-btn" type="submit" class="primary">Simpan</button>
+            <button id="reset-btn" type="button" class="muted">Reset</button>
+          </div>
+        </form>
+      </section>
+
+        </div>
+
+        <div id="page-monthly" class="page" style="display:none">
+          <section class="card">
+            <h2>Ringkasan Bulanan</h2>
+            <div class="row">
+              <label>Pilih Bulan</label>
+              <input id="month-picker" type="month">
+            </div>
+            <div class="summary-grid month-summary">
+              <div class="summary-item income">Rp <span id="month-income">0</span></div>
+              <div class="summary-item expense">Rp <span id="month-expense">0</span></div>
+              <div class="summary-item balance">Rp <span id="month-balance">0</span></div>
+            </div>
+            <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+              <button id="export-month" class="primary">Ekspor Bulan (XLSX)</button>
+              <button id="export-month-csv" class="muted">Ekspor Bulan (CSV)</button>
+              <label class="import-label">Import Excel
+                <input id="import-file" type="file" accept=".xlsx,.xls,.csv" style="display:none">
+              </label>
+            </div>
+            <ul id="month-entries" class="entries" style="margin-top:12px"></ul>
+          </section>
+        </div>
+
+        <!-- Budgets Page -->
+        <div id="page-budgets" class="page" style="display:none">
+          <section class="card">
+            <h2>Budget Bulanan</h2>
+            <form id="budget-form">
+              <div class="row">
+                <label>Kategori</label>
+                <input id="budget-category" type="text" placeholder="Contoh: Makanan, Transport" required>
+              </div>
+              <div class="row">
+                <label>Jumlah Budget (Rp)</label>
+                <input id="budget-amount" type="number" step="0.01" required>
+              </div>
+              <div class="row">
+                <label>Bulan</label>
+                <input id="budget-month" type="month" required>
+              </div>
+              <div class="row actions">
+                <button type="submit" class="primary">Tambah Budget</button>
+              </div>
+            </form>
+            <ul id="budgets-list" class="entries" style="margin-top:12px"></ul>
+          </section>
+        </div>
+
+        <!-- Recurring Entries Page -->
+        <div id="page-recurring" class="page" style="display:none">
+          <section class="card">
+            <h2>Entri Berulang</h2>
+            <form id="recurring-form">
+              <div class="row">
+                <label>Jumlah (Rp)</label>
+                <input id="recurring-amount" type="number" step="0.01" required>
+              </div>
+              <div class="row">
+                <label>Tipe</label>
+                <div class="btn-group">
+                  <button type="button" data-type="income" class="recurring-type-btn active">Pemasukan</button>
+                  <button type="button" data-type="expense" class="recurring-type-btn">Pengeluaran</button>
+                </div>
+              </div>
+              <div class="row">
+                <label>Kategori</label>
+                <input id="recurring-category" type="text" placeholder="Contoh: Gaji, Sewa">
+              </div>
+              <div class="row">
+                <label>Frekuensi</label>
+                <select id="recurring-frequency" required>
+                  <option value="daily">Harian</option>
+                  <option value="weekly">Mingguan</option>
+                  <option value="monthly" selected>Bulanan</option>
+                  <option value="yearly">Tahunan</option>
+                </select>
+              </div>
+              <div class="row">
+                <label>Catatan</label>
+                <input id="recurring-note" type="text" placeholder="Opsional">
+              </div>
+              <div class="row actions">
+                <button type="submit" class="primary">Tambah Entri Berulang</button>
+              </div>
+            </form>
+            <ul id="recurring-list" class="entries" style="margin-top:12px"></ul>
+          </section>
+        </div>
+
+        <!-- Savings Goals Page -->
+        <div id="page-goals" class="page" style="display:none">
+          <section class="card">
+            <h2>Target Tabungan</h2>
+            <form id="goal-form">
+              <div class="row">
+                <label>Nama Target</label>
+                <input id="goal-name" type="text" placeholder="Contoh: Liburan, Mobil" required>
+              </div>
+              <div class="row">
+                <label>Jumlah Target (Rp)</label>
+                <input id="goal-target" type="number" step="0.01" required>
+              </div>
+              <div class="row">
+                <label>Jumlah Saat Ini (Rp)</label>
+                <input id="goal-current" type="number" step="0.01" value="0">
+              </div>
+              <div class="row">
+                <label>Tanggal Target</label>
+                <input id="goal-date" type="date">
+              </div>
+              <div class="row actions">
+                <button type="submit" class="primary">Tambah Target</button>
+              </div>
+            </form>
+            <ul id="goals-list" class="entries" style="margin-top:12px"></ul>
+          </section>
+        </div>
+
+        <!-- Tags Page -->
+        <div id="page-tags" class="page" style="display:none">
+          <section class="card">
+            <h2>Kelola Tag</h2>
+            <form id="tag-form">
+              <div class="row">
+                <label>Nama Tag</label>
+                <input id="tag-name" type="text" placeholder="Contoh: Penting, Darurat" required>
+              </div>
+              <div class="row">
+                <label>Warna</label>
+                <input id="tag-color" type="color" value="#007bff">
+              </div>
+              <div class="row actions">
+                <button type="submit" class="primary">Tambah Tag</button>
+              </div>
+            </form>
+            <ul id="tags-list" class="entries" style="margin-top:12px"></ul>
+          </section>
+        </div>
+
+        <!-- Reports Page -->
+        <div id="page-reports" class="page" style="display:none">
+          <section class="card">
+            <h2>Laporan Kategori</h2>
+            <div class="row">
+              <label>Pilih Bulan (Opsional)</label>
+              <input id="report-month" type="month">
+            </div>
+            <button id="generate-report" class="primary" style="margin-top:8px">Generate Laporan</button>
+            <div id="report-chart" style="margin-top:12px; min-height: 200px;"></div>
+            <ul id="report-list" class="entries" style="margin-top:12px"></ul>
+          </section>
+        </div>
+
+      </div>
+
+      <section class="card summary-card">
+        <h2>Ringkasan</h2>
+        <div class="summary-grid">
+          <div class="summary-item income">Rp <span id="total-income">0</span></div>
+          <div class="summary-item expense">Rp <span id="total-expense">0</span></div>
+          <div class="summary-item balance">Rp <span id="balance">0</span></div>
+        </div>
+      </section>
+
+      <section class="card list-card">
+        <h2>Daftar Entri</h2>
+        <div class="filters">
+          <input id="search" placeholder="Cari kategori atau catatan">
+          <select id="filter-type">
+            <option value="all">Semua</option>
+            <option value="income">Pemasukan</option>
+            <option value="expense">Pengeluaran</option>
+          </select>
+        </div>
+        <ul id="entries" class="entries"></ul>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <small>Petunjuk singkat: masukkan jumlah, pilih tipe, lalu simpan. Dibuat untuk penggunaan lokal.</small>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
