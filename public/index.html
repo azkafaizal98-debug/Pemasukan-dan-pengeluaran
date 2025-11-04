@@ -13,26 +13,29 @@
       <div class="top-row" style="display: flex; justify-content: space-between; align-items: center;">
         <h1>Pemasukan & Pengeluaran</h1>
         <nav class="nav">
-          <select class="nav-select" id="nav-select">
-            <option value="dashboard">Dashboard</option>
-            <option value="home">Beranda</option>
-            <option value="monthly">Per Bulan</option>
-            <option value="budgets">Budget</option>
-            <option value="recurring">Berulang</option>
-            <option value="goals">Tabungan</option>
-            <option value="tags">Tag</option>
-            <option value="reports">Laporan</option>
-          </select>
-          <ul class="nav-list" id="nav-list">
-            <li><button class="nav-btn" data-page="dashboard">Dashboard</button></li>
-            <li><button class="nav-btn active" data-page="home">Beranda</button></li>
-            <li><button class="nav-btn" data-page="monthly">Per Bulan</button></li>
-            <li><button class="nav-btn" data-page="budgets">Budget</button></li>
-            <li><button class="nav-btn" data-page="recurring">Berulang</button></li>
-            <li><button class="nav-btn" data-page="goals">Tabungan</button></li>
-            <li><button class="nav-btn" data-page="tags">Tag</button></li>
-            <li><button class="nav-btn" data-page="reports">Laporan</button></li>
-          </ul>
+          <button class="nav-toggle" id="nav-toggle">☰ Menu</button>
+          <div class="nav-dropdown">
+            <select class="nav-select" id="nav-select">
+              <option value="dashboard">Dashboard</option>
+              <option value="home">Beranda</option>
+              <option value="monthly">Per Bulan</option>
+              <option value="budgets">Budget</option>
+              <option value="recurring">Berulang</option>
+              <option value="goals">Tabungan</option>
+              <option value="tags">Tag</option>
+              <option value="reports">Laporan</option>
+            </select>
+            <ul class="nav-list" id="nav-list">
+              <li><button class="nav-btn" data-page="dashboard">Dashboard</button></li>
+              <li><button class="nav-btn active" data-page="home">Beranda</button></li>
+              <li><button class="nav-btn" data-page="monthly">Per Bulan</button></li>
+              <li><button class="nav-btn" data-page="budgets">Budget</button></li>
+              <li><button class="nav-btn" data-page="recurring">Berulang</button></li>
+              <li><button class="nav-btn" data-page="goals">Tabungan</button></li>
+              <li><button class="nav-btn" data-page="tags">Tag</button></li>
+              <li><button class="nav-btn" data-page="reports">Laporan</button></li>
+            </ul>
+          </div>
         </nav>
       </div>
       <p class="sub">Tampilan bersih & modern — dapat ekspor/import Excel</p>

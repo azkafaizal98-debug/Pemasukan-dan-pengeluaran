@@ -17,7 +17,7 @@ body{font-family:Inter,Segoe UI,Roboto,system-ui,'Helvetica Neue',Arial; margin:
 .top-row{display:flex;justify-content:space-between;align-items:center;gap:12px}
 .nav{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;position:relative}
 .nav-toggle{display:none;background:var(--card);border:1px solid var(--glass);padding:8px 12px;border-radius:10px;cursor:pointer;color:var(--muted);box-shadow:0 4px 12px rgba(16,42,67,0.06)}
-.nav-dropdown{display:none}
+.nav-dropdown{display:block}
 .nav-select{display:none;padding:8px 12px;border-radius:10px;border:1px solid var(--glass);background:var(--card);color:var(--text);cursor:pointer}
 .nav-list{list-style:none;padding:0;margin:0;display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
 .nav-list li{margin:0}
