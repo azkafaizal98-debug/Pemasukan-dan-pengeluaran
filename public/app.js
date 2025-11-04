@@ -53,7 +53,7 @@ const api = {
 
 const $ = (sel) => document.querySelector(sel);
 let currentType = 'income';
-let editingId = nu
+let editingId = null;
 
 // page navigation
 function showPage(name){
@@ -64,9 +64,14 @@ function showPage(name){
 function formatRp(v){ return Number(v).toLocaleString('id-ID'); }
 
 async function load(){
-  const entries = await api.getEntries();
-  renderEntries(entries);
-  updateSummary();ll;
+  try {
+    const entries = await api.getEntries();
+    console.log('Entries loaded:', entries);
+    renderEntries(entries);
+    updateSummary();
+  } catch (error) {
+    console.error('Error loading entries:', error);
+  }
 }
 
 async function loadMonth(month){
@@ -294,29 +299,38 @@ showPage('home');
 
 // Budgets
 async function loadBudgets(){
-  const budgets = await api.getBudgets();
-  const list = $('#budgets-list');
-  list.innerHTML = '';
-  budgets.forEach(b => {
-    const li = document.createElement('li');
-    li.className = 'entry';
-    li.innerHTML = `
-      <div class="meta">
-        <div class="amount">${b.category}: Rp ${formatRp(b.amount)}</div>
-        <div class="small">Bulan: ${b.month}</div>
-      </div>
-      <div class="actions">
-        <button class="btn-delete">Hapus</button>
-      </div>
-    `;
-    li.querySelector('.btn-delete').addEventListener('click', async ()=>{
-      if(confirm('Hapus budget ini?')){
-        await api.deleteBudget(b.id);
-        loadBudgets();
-      }
+  try {
+    const budgets = await api.getBudgets();
+    console.log('Budgets loaded:', budgets);
+    const list = $('#budgets-list');
+    list.innerHTML = '';
+    if (!budgets.length) {
+      list.innerHTML = '<li class="small">Tidak ada budget</li>';
+      return;
+    }
+    budgets.forEach(b => {
+      const li = document.createElement('li');
+      li.className = 'entry';
+      li.innerHTML = `
+        <div class="meta">
+          <div class="amount">${b.category}: Rp ${formatRp(b.amount)}</div>
+          <div class="small">Bulan: ${b.month}</div>
+        </div>
+        <div class="actions">
+          <button class="btn-delete">Hapus</button>
+        </div>
+      `;
+      li.querySelector('.btn-delete').addEventListener('click', async ()=>{
+        if(confirm('Hapus budget ini?')){
+          await api.deleteBudget(b.id);
+          loadBudgets();
+        }
+      });
+      list.appendChild(li);
     });
-    list.appendChild(li);
-  });
+  } catch (error) {
+    console.error('Error loading budgets:', error);
+  }
 }
 
 $('#budget-form').addEventListener('submit', async (e)=>{
@@ -337,29 +351,38 @@ $('#budget-form').addEventListener('submit', async (e)=>{
 let recurringType = 'income';
 
 async function loadRecurring(){
-  const recurring = await api.getRecurring();
-  const list = $('#recurring-list');
-  list.innerHTML = '';
-  recurring.forEach(r => {
-    const li = document.createElement('li');
-    li.className = 'entry';
-    li.innerHTML = `
-      <div class="meta">
-        <div class="amount">${r.type==='income'?'+':'-'} Rp ${formatRp(r.amount)}</div>
-        <div class="small">${r.category} • ${r.frequency} • ${r.note || ''}</div>
-      </div>
-      <div class="actions">
-        <button class="btn-delete">Hapus</button>
-      </div>
-    `;
-    li.querySelector('.btn-delete').addEventListener('click', async ()=>{
-      if(confirm('Hapus entri berulang ini?')){
-        await api.deleteRecurring(r.id);
-        loadRecurring();
-      }
+  try {
+    const recurring = await api.getRecurring();
+    console.log('Recurring loaded:', recurring);
+    const list = $('#recurring-list');
+    list.innerHTML = '';
+    if (!recurring.length) {
+      list.innerHTML = '<li class="small">Tidak ada entri berulang</li>';
+      return;
+    }
+    recurring.forEach(r => {
+      const li = document.createElement('li');
+      li.className = 'entry';
+      li.innerHTML = `
+        <div class="meta">
+          <div class="amount">${r.type==='income'?'+':'-'} Rp ${formatRp(r.amount)}</div>
+          <div class="small">${r.category} • ${r.frequency} • ${r.note || ''}</div>
+        </div>
+        <div class="actions">
+          <button class="btn-delete">Hapus</button>
+        </div>
+      `;
+      li.querySelector('.btn-delete').addEventListener('click', async ()=>{
+        if(confirm('Hapus entri berulang ini?')){
+          await api.deleteRecurring(r.id);
+          loadRecurring();
+        }
+      });
+      list.appendChild(li);
     });
-    list.appendChild(li);
-  });
+  } catch (error) {
+    console.error('Error loading recurring:', error);
+  }
 }
 
 document.addEventListener('click', (e)=>{
@@ -390,38 +413,47 @@ $('#recurring-form').addEventListener('submit', async (e)=>{
 
 // Goals
 async function loadGoals(){
-  const goals = await api.getGoals();
-  const list = $('#goals-list');
-  list.innerHTML = '';
-  goals.forEach(g => {
-    const progress = g.targetAmount > 0 ? (g.currentAmount / g.targetAmount * 100) : 0;
-    const li = document.createElement('li');
-    li.className = 'entry';
-    li.innerHTML = `
-      <div class="meta">
-        <div class="amount">${g.name}: Rp ${formatRp(g.currentAmount)} / Rp ${formatRp(g.targetAmount)}</div>
-        <div class="small">Progress: ${progress.toFixed(1)}% ${g.targetDate ? '• Target: ' + new Date(g.targetDate).toLocaleDateString() : ''}</div>
-        <div style="width:100%;background:#eee;border-radius:4px;margin-top:4px"><div style="width:${progress}%;background:#007bff;height:8px;border-radius:4px"></div></div>
-      </div>
-      <div class="actions">
-        <button class="btn-edit">Update</button>
-        <button class="btn-delete">Hapus</button>
-      </div>
-    `;
-    li.querySelector('.btn-edit').addEventListener('click', ()=>{
-      const newAmount = prompt('Jumlah saat ini:', g.currentAmount);
-      if (newAmount !== null) {
-        api.putGoal(g.id, { currentAmount: parseFloat(newAmount) || 0 }).then(loadGoals);
-      }
+  try {
+    const goals = await api.getGoals();
+    console.log('Goals loaded:', goals);
+    const list = $('#goals-list');
+    list.innerHTML = '';
+    if (!goals.length) {
+      list.innerHTML = '<li class="small">Tidak ada target</li>';
+      return;
+    }
+    goals.forEach(g => {
+      const progress = g.targetAmount > 0 ? (g.currentAmount / g.targetAmount * 100) : 0;
+      const li = document.createElement('li');
+      li.className = 'entry';
+      li.innerHTML = `
+        <div class="meta">
+          <div class="amount">${g.name}: Rp ${formatRp(g.currentAmount)} / Rp ${formatRp(g.targetAmount)}</div>
+          <div class="small">Progress: ${progress.toFixed(1)}% ${g.targetDate ? '• Target: ' + new Date(g.targetDate).toLocaleDateString() : ''}</div>
+          <div style="width:100%;background:#eee;border-radius:4px;margin-top:4px"><div style="width:${progress}%;background:#007bff;height:8px;border-radius:4px"></div></div>
+        </div>
+        <div class="actions">
+          <button class="btn-edit">Update</button>
+          <button class="btn-delete">Hapus</button>
+        </div>
+      `;
+      li.querySelector('.btn-edit').addEventListener('click', ()=>{
+        const newAmount = prompt('Jumlah saat ini:', g.currentAmount);
+        if (newAmount !== null) {
+          api.putGoal(g.id, { currentAmount: parseFloat(newAmount) || 0 }).then(loadGoals);
+        }
+      });
+      li.querySelector('.btn-delete').addEventListener('click', async ()=>{
+        if(confirm('Hapus target ini?')){
+          await api.deleteGoal(g.id);
+          loadGoals();
+        }
+      });
+      list.appendChild(li);
     });
-    li.querySelector('.btn-delete').addEventListener('click', async ()=>{
-      if(confirm('Hapus target ini?')){
-        await api.deleteGoal(g.id);
-        loadGoals();
-      }
-    });
-    list.appendChild(li);
-  });
+  } catch (error) {
+    console.error('Error loading goals:', error);
+  }
 }
 
 $('#goal-form').addEventListener('submit', async (e)=>{
@@ -441,31 +473,40 @@ $('#goal-form').addEventListener('submit', async (e)=>{
 
 // Tags
 async function loadTags(){
-  const tags = await api.getTags();
-  const list = $('#tags-list');
-  list.innerHTML = '';
-  tags.forEach(t => {
-    const li = document.createElement('li');
-    li.className = 'entry';
-    li.innerHTML = `
-      <div class="meta">
-        <div style="display:flex;align-items:center;gap:8px">
-          <div style="width:16px;height:16px;border-radius:50%;background:${t.color}"></div>
-          <div class="amount">${t.name}</div>
+  try {
+    const tags = await api.getTags();
+    console.log('Tags loaded:', tags);
+    const list = $('#tags-list');
+    list.innerHTML = '';
+    if (!tags.length) {
+      list.innerHTML = '<li class="small">Tidak ada tag</li>';
+      return;
+    }
+    tags.forEach(t => {
+      const li = document.createElement('li');
+      li.className = 'entry';
+      li.innerHTML = `
+        <div class="meta">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:16px;height:16px;border-radius:50%;background:${t.color}"></div>
+            <div class="amount">${t.name}</div>
+          </div>
         </div>
-      </div>
-      <div class="actions">
-        <button class="btn-delete">Hapus</button>
-      </div>
-    `;
-    li.querySelector('.btn-delete').addEventListener('click', async ()=>{
-      if(confirm('Hapus tag ini?')){
-        await api.deleteTag(t.id);
-        loadTags();
-      }
+        <div class="actions">
+          <button class="btn-delete">Hapus</button>
+        </div>
+      `;
+      li.querySelector('.btn-delete').addEventListener('click', async ()=>{
+        if(confirm('Hapus tag ini?')){
+          await api.deleteTag(t.id);
+          loadTags();
+        }
+      });
+      list.appendChild(li);
     });
-    list.appendChild(li);
-  });
+  } catch (error) {
+    console.error('Error loading tags:', error);
+  }
 }
 
 $('#tag-form').addEventListener('submit', async (e)=>{
@@ -514,10 +555,116 @@ $('#generate-report').addEventListener('click', async ()=>{
   });
 });
 
+// Dashboard
+async function loadDashboard(){
+  try {
+    const [entries, budgets, recurring, goals, tags] = await Promise.all([
+      api.getEntries(),
+      api.getBudgets(),
+      api.getRecurring(),
+      api.getGoals(),
+      api.getTags()
+    ]);
+    console.log('Dashboard data loaded:', {entries, budgets, recurring, goals, tags});
+
+    // Update counts
+    $('#dashboard-entries-count').textContent = entries.length;
+    $('#dashboard-budgets-count').textContent = budgets.length;
+    $('#dashboard-recurring-count').textContent = recurring.length;
+    $('#dashboard-goals-count').textContent = goals.length;
+    $('#dashboard-tags-count').textContent = tags.length;
+
+    // Recent entries
+    const recentEntries = entries.slice(-5).reverse();
+    const entriesList = $('#dashboard-recent-entries');
+    entriesList.innerHTML = '';
+    recentEntries.forEach(e => {
+      const li = document.createElement('li');
+      li.className = 'entry';
+      li.innerHTML = `
+        <div class="meta">
+          <div class="amount">${e.type==='income'?'+':'-'} Rp ${formatRp(e.amount)}</div>
+          <div class="small">${e.category} • ${new Date(e.date).toLocaleDateString()}</div>
+        </div>
+      `;
+      entriesList.appendChild(li);
+    });
+
+    // Recent budgets
+    const recentBudgets = budgets.slice(-5).reverse();
+    const budgetsList = $('#dashboard-recent-budgets');
+    budgetsList.innerHTML = '';
+    recentBudgets.forEach(b => {
+      const li = document.createElement('li');
+      li.className = 'entry';
+      li.innerHTML = `
+        <div class="meta">
+          <div class="amount">${b.category}: Rp ${formatRp(b.amount)}</div>
+          <div class="small">Bulan: ${b.month}</div>
+        </div>
+      `;
+      budgetsList.appendChild(li);
+    });
+
+    // Recent recurring
+    const recentRecurring = recurring.slice(-5).reverse();
+    const recurringList = $('#dashboard-recent-recurring');
+    recurringList.innerHTML = '';
+    recentRecurring.forEach(r => {
+      const li = document.createElement('li');
+      li.className = 'entry';
+      li.innerHTML = `
+        <div class="meta">
+          <div class="amount">${r.type==='income'?'+':'-'} Rp ${formatRp(r.amount)}</div>
+          <div class="small">${r.category} • ${r.frequency}</div>
+        </div>
+      `;
+      recurringList.appendChild(li);
+    });
+
+    // Recent goals
+    const recentGoals = goals.slice(-5).reverse();
+    const goalsList = $('#dashboard-recent-goals');
+    goalsList.innerHTML = '';
+    recentGoals.forEach(g => {
+      const li = document.createElement('li');
+      li.className = 'entry';
+      li.innerHTML = `
+        <div class="meta">
+          <div class="amount">${g.name}: Rp ${formatRp(g.currentAmount)} / Rp ${formatRp(g.targetAmount)}</div>
+          <div class="small">Progress: ${g.targetAmount > 0 ? (g.currentAmount / g.targetAmount * 100).toFixed(1) : 0}%</div>
+        </div>
+      `;
+      goalsList.appendChild(li);
+    });
+
+    // Recent tags
+    const recentTags = tags.slice(-5).reverse();
+    const tagsList = $('#dashboard-recent-tags');
+    tagsList.innerHTML = '';
+    recentTags.forEach(t => {
+      const li = document.createElement('li');
+      li.className = 'entry';
+      li.innerHTML = `
+        <div class="meta">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:16px;height:16px;border-radius:50%;background:${t.color}"></div>
+            <div class="amount">${t.name}</div>
+          </div>
+        </div>
+      `;
+      tagsList.appendChild(li);
+    });
+  } catch (error) {
+    console.error('Error loading dashboard:', error);
+  }
+}
+
 // Load data for new pages when navigated to
 document.addEventListener('click', (e)=>{
   if (e.target.matches('.nav-btn')) {
     const page = e.target.dataset.page;
+    if (page === 'dashboard') loadDashboard();
     if (page === 'budgets') loadBudgets();
     if (page === 'recurring') loadRecurring();
     if (page === 'goals') loadGoals();
