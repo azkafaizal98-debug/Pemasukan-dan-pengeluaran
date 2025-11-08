@@ -747,8 +747,7 @@ warna.addEventListener("click" ,function(){
 
 warna2.addEventListener("click" ,function(){
   if(warna2.style.background === "var(--danger)"){
-    warna2.style.background = "white"
-    warna.style.background = "var(--success)"
+    warna2.style.background = "var(--accent)"
   }else{
     warna2.style.background = "var(--danger)"
     warna.style.background = "var(--accent)"
