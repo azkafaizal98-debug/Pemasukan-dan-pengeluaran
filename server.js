@@ -5,12 +5,21 @@ const path = require('path');
 const { v4: uuidv4 } = require('uuid');
 const multer = require('multer');
 const XLSX = require('xlsx');
+const { createClient } = require('@supabase/supabase-js');
+require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 const HOST = process.env.HOST || '0.0.0.0';
-const DB_PATH = path.join(__dirname, 'data', 'db.json');
 
+// Supabase setup
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Fallback to local JSON if Supabase not configured
+const DB_PATH = path.join(__dirname, 'data', 'db.json');
+const useSupabase = supabaseUrl && supabaseKey;
 
 app.use(cors({
   origin: true,
@@ -23,17 +32,40 @@ app.use(express.static(path.join(__dirname, 'public')));
 const upload = multer({ storage: multer.memoryStorage() });
 
 async function readDB(){
-  try{
-    const txt = await fs.readFile(DB_PATH, 'utf8');
-    return JSON.parse(txt);
-  }catch(e){
-    return { entries: [], budgets: [], recurring: [], goals: [], tags: [] };
+  if (useSupabase) {
+    // Read from Supabase
+    const tables = ['entries', 'budgets', 'recurring', 'goals', 'tags'];
+    const db = {};
+    for (const table of tables) {
+      const { data, error } = await supabase.from(table).select('*').order('createdAt', { ascending: false });
+      if (error) {
+        console.error(`Error reading ${table}:`, error);
+        db[table] = [];
+      } else {
+        db[table] = data || [];
+      }
+    }
+    return db;
+  } else {
+    // Fallback to local JSON
+    try{
+      const txt = await fs.readFile(DB_PATH, 'utf8');
+      return JSON.parse(txt);
+    }catch(e){
+      return { entries: [], budgets: [], recurring: [], goals: [], tags: [] };
+    }
   }
 }
 
 async function writeDB(db){
-  await fs.mkdir(path.dirname(DB_PATH), { recursive: true });
-  await fs.writeFile(DB_PATH, JSON.stringify(db, null, 2));
+  if (useSupabase) {
+    // This function is not needed for Supabase as we write directly to tables
+    return;
+  } else {
+    // Fallback to local JSON
+    await fs.mkdir(path.dirname(DB_PATH), { recursive: true });
+    await fs.writeFile(DB_PATH, JSON.stringify(db, null, 2));
+  }
 }
 
 
@@ -50,38 +82,69 @@ app.post('/api/entries', async (req, res) => {
     return res.status(400).json({ error: 'Payload tidak valid' });
   }
   const entry = {
-    id: uuidv4(),
     amount,
     type,
     category: category || 'Umum',
     date: date || new Date().toISOString(),
-    note: note || ''
+    note: note || '',
+    createdAt: new Date().toISOString()
   };
-  const db = await readDB();
-  db.entries.unshift(entry);
-  await writeDB(db);
-  res.json(entry);
+  if (!useSupabase) {
+    entry.id = uuidv4();
+  }
+  if (useSupabase) {
+    const { data, error } = await supabase.from('entries').insert([entry]).select();
+    if (error) {
+      console.error('Error inserting entry:', error);
+      return res.status(500).json({ error: 'Gagal menyimpan data' });
+    }
+    res.json(data[0]);
+  } else {
+    const db = await readDB();
+    db.entries.unshift(entry);
+    await writeDB(db);
+    res.json(entry);
+  }
 });
 
 app.put('/api/entries/:id', async (req, res) => {
   const id = req.params.id;
-  const db = await readDB();
-  const idx = db.entries.findIndex(e => e.id === id);
-  if (idx === -1) return res.status(404).json({ error: 'Entri tidak ditemukan' });
-  const updated = { ...db.entries[idx], ...req.body };
-  db.entries[idx] = updated;
-  await writeDB(db);
-  res.json(updated);
+  if (useSupabase) {
+    const { data, error } = await supabase.from('entries').update(req.body).eq('id', id).select();
+    if (error) {
+      console.error('Error updating entry:', error);
+      return res.status(500).json({ error: 'Gagal update data' });
+    }
+    if (data.length === 0) return res.status(404).json({ error: 'Entri tidak ditemukan' });
+    res.json(data[0]);
+  } else {
+    const db = await readDB();
+    const idx = db.entries.findIndex(e => e.id === id);
+    if (idx === -1) return res.status(404).json({ error: 'Entri tidak ditemukan' });
+    const updated = { ...db.entries[idx], ...req.body };
+    db.entries[idx] = updated;
+    await writeDB(db);
+    res.json(updated);
+  }
 });
 
 app.delete('/api/entries/:id', async (req, res) => {
   const id = req.params.id;
-  const db = await readDB();
-  const before = db.entries.length;
-  db.entries = db.entries.filter(e => e.id !== id);
-  if (db.entries.length === before) return res.status(404).json({ error: 'Entri tidak ditemukan' });
-  await writeDB(db);
-  res.json({ success: true });
+  if (useSupabase) {
+    const { error } = await supabase.from('entries').delete().eq('id', id);
+    if (error) {
+      console.error('Error deleting entry:', error);
+      return res.status(500).json({ error: 'Gagal hapus data' });
+    }
+    res.json({ success: true });
+  } else {
+    const db = await readDB();
+    const before = db.entries.length;
+    db.entries = db.entries.filter(e => e.id !== id);
+    if (db.entries.length === before) return res.status(404).json({ error: 'Entri tidak ditemukan' });
+    await writeDB(db);
+    res.json({ success: true });
+  }
 });
 
 app.get('/api/summary', async (req, res) => {
@@ -160,16 +223,27 @@ app.post('/api/budgets', async (req, res) => {
     return res.status(400).json({ error: 'Jumlah budget tidak valid' });
   }
   const budget = {
-    id: uuidv4(),
     category: category || 'Umum',
     amount,
     month: month || new Date().toISOString().slice(0,7),
     createdAt: new Date().toISOString()
   };
-  const db = await readDB();
-  db.budgets.unshift(budget);
-  await writeDB(db);
-  res.json(budget);
+  if (!useSupabase) {
+    budget.id = uuidv4();
+  }
+  if (useSupabase) {
+    const { data, error } = await supabase.from('budgets').insert([budget]).select();
+    if (error) {
+      console.error('Error inserting budget:', error);
+      return res.status(500).json({ error: 'Gagal menyimpan budget' });
+    }
+    res.json(data[0]);
+  } else {
+    const db = await readDB();
+    db.budgets.unshift(budget);
+    await writeDB(db);
+    res.json(budget);
+  }
 });
 
 app.put('/api/budgets/:id', async (req, res) => {
@@ -205,7 +279,6 @@ app.post('/api/recurring', async (req, res) => {
     return res.status(400).json({ error: 'Data tidak valid' });
   }
   const recurring = {
-    id: uuidv4(),
     amount,
     type,
     category: category || 'Umum',
@@ -214,10 +287,22 @@ app.post('/api/recurring', async (req, res) => {
     nextDate: new Date().toISOString(),
     createdAt: new Date().toISOString()
   };
-  const db = await readDB();
-  db.recurring.unshift(recurring);
-  await writeDB(db);
-  res.json(recurring);
+  if (!useSupabase) {
+    recurring.id = uuidv4();
+  }
+  if (useSupabase) {
+    const { data, error } = await supabase.from('recurring').insert([recurring]).select();
+    if (error) {
+      console.error('Error inserting recurring:', error);
+      return res.status(500).json({ error: 'Gagal menyimpan entri berulang' });
+    }
+    res.json(data[0]);
+  } else {
+    const db = await readDB();
+    db.recurring.unshift(recurring);
+    await writeDB(db);
+    res.json(recurring);
+  }
 });
 
 app.put('/api/recurring/:id', async (req, res) => {
@@ -253,17 +338,28 @@ app.post('/api/goals', async (req, res) => {
     return res.status(400).json({ error: 'Jumlah target tidak valid' });
   }
   const goal = {
-    id: uuidv4(),
     name,
     targetAmount,
     currentAmount: currentAmount || 0,
     targetDate: targetDate || null,
     createdAt: new Date().toISOString()
   };
-  const db = await readDB();
-  db.goals.unshift(goal);
-  await writeDB(db);
-  res.json(goal);
+  if (!useSupabase) {
+    goal.id = uuidv4();
+  }
+  if (useSupabase) {
+    const { data, error } = await supabase.from('goals').insert([goal]).select();
+    if (error) {
+      console.error('Error inserting goal:', error);
+      return res.status(500).json({ error: 'Gagal menyimpan goal' });
+    }
+    res.json(data[0]);
+  } else {
+    const db = await readDB();
+    db.goals.unshift(goal);
+    await writeDB(db);
+    res.json(goal);
+  }
 });
 
 app.put('/api/goals/:id', async (req, res) => {
@@ -297,15 +393,26 @@ app.post('/api/tags', async (req, res) => {
   const { name, color } = req.body;
   if (!name) return res.status(400).json({ error: 'Nama tag diperlukan' });
   const tag = {
-    id: uuidv4(),
     name,
     color: color || '#007bff',
     createdAt: new Date().toISOString()
   };
-  const db = await readDB();
-  db.tags.unshift(tag);
-  await writeDB(db);
-  res.json(tag);
+  if (!useSupabase) {
+    tag.id = uuidv4();
+  }
+  if (useSupabase) {
+    const { data, error } = await supabase.from('tags').insert([tag]).select();
+    if (error) {
+      console.error('Error inserting tag:', error);
+      return res.status(500).json({ error: 'Gagal menyimpan tag' });
+    }
+    res.json(data[0]);
+  } else {
+    const db = await readDB();
+    db.tags.unshift(tag);
+    await writeDB(db);
+    res.json(tag);
+  }
 });
 
 app.put('/api/tags/:id', async (req, res) => {
