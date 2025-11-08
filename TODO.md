@@ -3,3 +3,9 @@
 - [x] Edit public/app.js: Update event listeners for li clicks, add mobile nav toggle logic
 - [x] Test navigation on desktop and mobile
 - [x] Adjust styles if needed for better appearance
+- [x] Fix recurring entries: Update server.js for full Supabase support, add error handling in frontend
+- [x] Add success alert after saving recurring entry
+- [x] Add error handling and success alerts for the goals form
+- [x] Add visual distinction for income/expense buttons (e.g., different colors when clicked)
+- [x] Change amount input formatting from blur to input event for real-time formatting
+- [x] Remove maxLength limit on amount inputs to allow large numbers

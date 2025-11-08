@@ -38,7 +38,7 @@
           </div>
         </nav>
       </div>
-      <p class="sub">Cataran Pemasukan dan Pengeluaran dapat ekspor/import Excel</p>
+      <p class="sub">Catatan Pemasukan dan Pengeluaran dapat ekspor/import Excel</p>
     </header>
 
     <main>
@@ -83,7 +83,7 @@
         <form id="entry-form">
           <div class="row">
             <label>Jumlah (Rp)</label>
-            <input id="amount" type="number" step="0.01" required>
+            <input id="amount" type="text" required>
           </div>
           <div class="row">
             <label>Tipe</label>
@@ -147,7 +147,7 @@
               </div>
               <div class="row">
                 <label>Jumlah Budget (Rp)</label>
-                <input id="budget-amount" type="number" step="0.01" required>
+                <input id="budget-amount" type="text" required>
               </div>
               <div class="row">
                 <label>Bulan</label>
@@ -168,13 +168,13 @@
             <form id="recurring-form">
               <div class="row">
                 <label>Jumlah (Rp)</label>
-                <input id="recurring-amount" type="number" step="0.01" required>
+                <input id="recurring-amount" type="text" required>
               </div>
               <div class="row">
                 <label>Tipe</label>
-                <div class="btn-group">
-                  <button type="button" data-type="income" class="recurring-type-btn active">Pemasukan</button>
-                  <button type="button" data-type="expense" class="recurring-type-btn">Pengeluaran</button>
+                <div class="btn-group btn-berulang">
+                  <button type="button" data-type="income" class="recurring-type-btn active" id="warna">Pemasukan</button>
+                  <button type="button" data-type="expense" class="recurring-type-btn" id="warna2">Pengeluaran</button>
                 </div>
               </div>
               <div class="row">
@@ -213,11 +213,11 @@
               </div>
               <div class="row">
                 <label>Jumlah Target (Rp)</label>
-                <input id="goal-target" type="number" step="0.01" required>
+                <input id="goal-target" type="text" required>
               </div>
               <div class="row">
                 <label>Jumlah Saat Ini (Rp)</label>
-                <input id="goal-current" type="number" step="0.01" value="0">
+                <input id="goal-current" type="text" value="0">
               </div>
               <div class="row">
                 <label>Tanggal Target</label>

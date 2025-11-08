@@ -27,14 +27,20 @@ const api = {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify(data)
-  }).then(r => r.json()),
+  }).then(r => {
+    if (!r.ok) throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+    return r.json();
+  }),
   deleteRecurring: (id) => fetch('/api/recurring/'+id, { method: 'DELETE' }).then(r => r.json()),
   getGoals: () => fetch('/api/goals').then(r => r.json()),
   postGoal: (data) => fetch('/api/goals', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify(data)
-  }).then(r => r.json()),
+  }).then(r => {
+    if (!r.ok) throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+    return r.json();
+  }),
   putGoal: (id, data) => fetch('/api/goals/'+id, {
     method: 'PUT',
     headers: {'Content-Type': 'application/json'},
@@ -61,7 +67,52 @@ function showPage(name){
   document.querySelectorAll('.page').forEach(p=>p.style.display = (p.id===`page-${name}`? 'block':'none'));
 }
 
-function formatRp(v){ return Number(v).toLocaleString('id-ID'); }
+function formatRp(v){
+  if (!v) return '0';
+  return Number(v).toLocaleString('id-ID');
+}
+
+function formatInput(value) {
+  // Remove non-digits and add dots as thousand separators
+  return value.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+function formatInputPreserveCursor(input) {
+  if (input.dataset.formatting) return;
+  input.dataset.formatting = 'true';
+  const originalValue = input.value;
+  const cursorPos = input.selectionStart;
+  const digitsOnly = originalValue.replace(/\D/g, '');
+  const formatted = digitsOnly.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  if (formatted === originalValue) {
+    delete input.dataset.formatting;
+    return;
+  }
+  input.value = formatted;
+  // Calculate new cursor position based on digit count before cursor
+  let digitCount = 0;
+  for (let i = 0; i < cursorPos; i++) {
+    if (/\d/.test(originalValue[i])) digitCount++;
+  }
+  let newPos = 0;
+  let digitsFound = 0;
+  for (let i = 0; i < formatted.length; i++) {
+    if (/\d/.test(formatted[i])) digitsFound++;
+    if (digitsFound > digitCount) {
+      newPos = i;
+      break;
+    }
+    newPos = i + 1;
+  }
+  input.setSelectionRange(newPos, newPos);
+  delete input.dataset.formatting;
+}
+
+// Alternative simpler formatting function
+function formatInputSimple(input) {
+  const value = input.value.replace(/\D/g, '');
+  input.value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
 
 async function load(){
   try {
@@ -110,7 +161,7 @@ function renderEntries(entries){
     });
     li.querySelector('.btn-edit').addEventListener('click', ()=>{
       editingId = e.id;
-      $('#amount').value = e.amount;
+      $('#amount').value = formatInput(e.amount.toString());
       currentType = e.type;
       document.querySelectorAll('.type-btn').forEach(b=>b.classList.toggle('active', b.dataset.type===currentType));
       $('#category').value = e.category || '';
@@ -147,7 +198,7 @@ function renderMonthEntries(entries){
     });
     li.querySelector('.btn-edit').addEventListener('click', ()=>{
       editingId = e.id;
-      $('#amount').value = e.amount;
+      $('#amount').value = formatInput(e.amount.toString());
       currentType = e.type;
       document.querySelectorAll('.type-btn').forEach(b=>b.classList.toggle('active', b.dataset.type===currentType));
       $('#category').value = e.category || '';
@@ -181,7 +232,7 @@ document.addEventListener('click', (e)=>{
 
 $('#entry-form').addEventListener('submit', async (ev)=>{
   ev.preventDefault();
-  const amount = parseFloat($('#amount').value);
+  const amount = parseFloat($('#amount').value.replace(/\./g, ''));
   if (isNaN(amount) || amount<=0){ alert('Masukkan jumlah yang valid'); return; }
   const data = {
     amount,
@@ -335,7 +386,7 @@ async function loadBudgets(){
 
 $('#budget-form').addEventListener('submit', async (e)=>{
   e.preventDefault();
-  const amount = parseFloat($('#budget-amount').value);
+  const amount = parseFloat($('#budget-amount').value.replace(/\./g, ''));
   if (isNaN(amount) || amount<=0){ alert('Masukkan jumlah yang valid'); return; }
   const data = {
     category: $('#budget-category').value,
@@ -395,7 +446,7 @@ document.addEventListener('click', (e)=>{
 
 $('#recurring-form').addEventListener('submit', async (e)=>{
   e.preventDefault();
-  const amount = parseFloat($('#recurring-amount').value);
+  const amount = parseFloat($('#recurring-amount').value.replace(/\./g, ''));
   if (isNaN(amount) || amount<=0){ alert('Masukkan jumlah yang valid'); return; }
   const data = {
     amount,
@@ -404,11 +455,16 @@ $('#recurring-form').addEventListener('submit', async (e)=>{
     frequency: $('#recurring-frequency').value,
     note: $('#recurring-note').value
   };
-  await api.postRecurring(data);
-  $('#recurring-form').reset();
-  document.querySelectorAll('.recurring-type-btn').forEach(b=>b.classList.toggle('active', b.dataset.type==='income'));
-  recurringType = 'income';
-  loadRecurring();
+  try {
+    await api.postRecurring(data);
+    $('#recurring-form').reset();
+    document.querySelectorAll('.recurring-type-btn').forEach(b=>b.classList.toggle('active', b.dataset.type==='income'));
+    recurringType = 'income';
+    loadRecurring();
+    alert('Entri berulang berhasil disimpan!');
+  } catch (error) {
+    alert('Gagal menyimpan entri berulang: ' + error.message);
+  }
 });
 
 // Goals
@@ -440,7 +496,7 @@ async function loadGoals(){
       li.querySelector('.btn-edit').addEventListener('click', ()=>{
         const newAmount = prompt('Jumlah saat ini:', g.currentAmount);
         if (newAmount !== null) {
-          api.putGoal(g.id, { currentAmount: parseFloat(newAmount) || 0 }).then(loadGoals);
+          api.putGoal(g.id, { currentAmount: parseFloat(newAmount.replace(/\./g, '')) || 0 }).then(loadGoals);
         }
       });
       li.querySelector('.btn-delete').addEventListener('click', async ()=>{
@@ -458,17 +514,22 @@ async function loadGoals(){
 
 $('#goal-form').addEventListener('submit', async (e)=>{
   e.preventDefault();
-  const targetAmount = parseFloat($('#goal-target').value);
+  const targetAmount = parseFloat($('#goal-target').value.replace(/\./g, ''));
   if (isNaN(targetAmount) || targetAmount<=0){ alert('Masukkan jumlah target yang valid'); return; }
   const data = {
     name: $('#goal-name').value,
     targetAmount,
-    currentAmount: parseFloat($('#goal-current').value) || 0,
+    currentAmount: parseFloat($('#goal-current').value.replace(/\./g, '')) || 0,
     targetDate: $('#goal-date').value || null
   };
-  await api.postGoal(data);
-  $('#goal-form').reset();
-  loadGoals();
+  try {
+    await api.postGoal(data);
+    $('#goal-form').reset();
+    loadGoals();
+    alert('Target berhasil disimpan!');
+  } catch (error) {
+    alert('Gagal menyimpan target: ' + error.message);
+  }
 });
 
 // Tags
@@ -670,4 +731,50 @@ document.addEventListener('click', (e)=>{
     if (page === 'goals') loadGoals();
     if (page === 'tags') loadTags();
   }
+});
+
+let warna = document.getElementById("warna")
+let warna2 = document.getElementById("warna2")
+// Perubahan Tombol by azka
+warna.addEventListener("click" ,function(){
+  if(warna.style.background === "var(--success)"){
+    warna.style.background = "var(--accent)"
+  }else{
+    warna.style.background = "var(--success)"
+    warna2.style.background = "var(--accent)"
+  }
+})
+
+warna2.addEventListener("click" ,function(){
+  if(warna2.style.background === "var(--danger)"){
+    warna2.style.background = "white"
+    warna.style.background = "var(--success)"
+  }else{
+    warna2.style.background = "var(--danger)"
+    warna.style.background = "var(--accent)"
+  }
+})
+
+
+// No max length limit for amount inputs to allow large formatted numbers
+
+// Format amount inputs on input
+document.getElementById('amount').addEventListener('input', (e) => {
+  formatInputPreserveCursor(e.target);
+});
+
+document.getElementById('budget-amount').addEventListener('input', (e) => {
+  formatInputPreserveCursor(e.target);
+});
+
+document.getElementById('recurring-amount').addEventListener('input', (e) => {
+  formatInputPreserveCursor(e.target);
+});
+
+document.getElementById('goal-target').addEventListener('input', (e) => {
+  formatInputPreserveCursor(e.target);
+});
+
+document.getElementById('goal-current').addEventListener('input', (e) => {
+  formatInputPreserveCursor(e.target);
 });
