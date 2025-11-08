@@ -395,7 +395,6 @@ app.post('/api/goals', async (req, res) => {
     targetAmount,
     currentAmount: currentAmount || 0,
     targetDate: targetDate || null,
-    no: 1,
     createdAt: new Date().toISOString()
   };
   if (!useSupabase) {
