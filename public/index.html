@@ -1,31 +1,37 @@
 <!doctype html>
 <html lang="id">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Pencatat Pemasukan & Pengeluaran</title>
   <link rel="stylesheet" href="style.css">
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+  />
 
 </head>
+
 <body>
   <div class="app">
-    <header class="header">
-      <div class="top-row" style="display: flex; justify-content: space-between; align-items: center;">
-        <h1>Pemasukan & Pengeluaran</h1>
+    <header class="header" style="text-align: center;">
+      <h1 class="animate__animated animate__fadeIn">Pemasukan & Pengeluaran</h1>
+      <div class="top-row" style="display: flex; justify-content: space-between; align-items: end;">
         <nav class="nav">
-          <button class="nav-toggle" id="nav-toggle">☰ Menu</button>
+          <button class="nav-toggle animate__animated animate__fadeInRight " id="nav-toggle">☰ Menu</button>
           <div class="nav-dropdown">
-            <select class="nav-select" id="nav-select">
-              <option value="dashboard">Dashboard</option>
-              <option value="home">Beranda</option>
-              <option value="monthly">Per Bulan</option>
-              <option value="budgets">Budget</option>
-              <option value="recurring">Berulang</option>
-              <option value="goals">Tabungan</option>
-              <option value="tags">Tag</option>
-              <option value="reports">Laporan</option>
-            </select>
-            <ul class="nav-list" id="nav-list">
+            <ul class="nav-select animate__animated animate__fadeInLeft" id="nav-select">
+              <li><button class="nav-btn" data-page="dashboard">Dashboard</button></li>
+              <li><button class="nav-btn active" data-page="home">Beranda</button></li>
+              <li><button class="nav-btn" data-page="monthly">Per Bulan</button></li>
+              <li><button class="nav-btn" data-page="budgets">Budget</button></li>
+              <li><button class="nav-btn" data-page="recurring">Berulang</button></li>
+              <li><button class="nav-btn" data-page="goals">Tabungan</button></li>
+              <li><button class="nav-btn" data-page="tags">Tag</button></li>
+              <li><button class="nav-btn" data-page="reports">Laporan</button></li>
+            </ul>
+            <ul class="nav-list animate__animated animate__fadeIn" id="nav-list" >
               <li><button class="nav-btn" data-page="dashboard">Dashboard</button></li>
               <li><button class="nav-btn active" data-page="home">Beranda</button></li>
               <li><button class="nav-btn" data-page="monthly">Per Bulan</button></li>
@@ -38,7 +44,7 @@
           </div>
         </nav>
       </div>
-      <p class="sub">Catatan Pemasukan dan Pengeluaran dapat ekspor/import Excel</p>
+      <p class="sub animate__animated animate__fadeIn">Catatan Pemasukan dan Pengeluaran dapat ekspor/import Excel</p>
     </header>
 
     <main>
@@ -78,38 +84,38 @@
         </div>
 
         <div id="page-home" class="page">
-      <section class="card form-card">
-        <h2>Tambah Entri</h2>
-        <form id="entry-form">
-          <div class="row">
-            <label>Jumlah (Rp)</label>
-            <input id="amount" type="text" required>
-          </div>
-          <div class="row">
-            <label>Tipe</label>
-            <div class="btn-group">
-              <button type="button" data-type="income" class="type-btn active">Pemasukan</button>
-              <button type="button" data-type="expense" class="type-btn">Pengeluaran</button>
-            </div>
-          </div>
-          <div class="row">
-            <label>Kategori</label>
-            <input id="category" type="text" placeholder="Contoh: Gaji, Makanan">
-          </div>
-          <div class="row">
-            <label>Tanggal</label>
-            <input id="date" type="date">
-          </div>
-          <div class="row">
-            <label>Catatan</label>
-            <input id="note" type="text" placeholder="Opsional">
-          </div>
-          <div class="row actions">
-            <button id="save-btn" type="submit" class="primary">Simpan</button>
-            <button id="reset-btn" type="button" class="muted">Reset</button>
-          </div>
-        </form>
-      </section>
+          <section class="card form-card  animate__animated animate__fadeInUp">
+            <h2>Tambah Entri</h2>
+            <form id="entry-form">
+              <div class="row">
+                <label>Jumlah (Rp)</label>
+                <input id="amount" type="text" required>
+              </div>
+              <div class="row">
+                <label>Tipe</label>
+                <div class="btn-group">
+                  <button type="button" data-type="income" class="type-btn active">Pemasukan</button>
+                  <button type="button" data-type="expense" class="type-btn">Pengeluaran</button>
+                </div>
+              </div>
+              <div class="row">
+                <label>Kategori</label>
+                <input id="category" type="text" placeholder="Contoh: Gaji, Makanan">
+              </div>
+              <div class="row">
+                <label>Tanggal</label>
+                <input id="date" type="date">
+              </div>
+              <div class="row">
+                <label>Catatan</label>
+                <input id="note" type="text" placeholder="Opsional">
+              </div>
+              <div class="row actions">
+                <button id="save-btn" type="submit" class="primary">Simpan</button>
+                <button id="reset-btn" type="button" class="muted">Reset</button>
+              </div>
+            </form>
+          </section>
 
         </div>
 
@@ -173,7 +179,8 @@
               <div class="row">
                 <label>Tipe</label>
                 <div class="btn-group btn-berulang">
-                  <button type="button" data-type="income" class="recurring-type-btn active" id="warna">Pemasukan</button>
+                  <button type="button" data-type="income" class="recurring-type-btn active"
+                    id="warna">Pemasukan</button>
                   <button type="button" data-type="expense" class="recurring-type-btn" id="warna2">Pengeluaran</button>
                 </div>
               </div>
@@ -298,4 +305,5 @@
 
   <script src="app.js"></script>
 </body>
+
 </html>

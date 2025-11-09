@@ -13,6 +13,18 @@
   box-sizing: border-box
 }
 
+.animate__animated.animate__fadeIn{
+  --animate-duration: 2s;
+}
+
+.animate__animated.animate__fadeInUp{
+  --animate-duration: 1.5s;
+}
+
+.animate__animated.animate__fadeInRight{
+  --animate-duration: 1.5s;
+}
+
 body {
   font-family: Inter, Segoe UI, Roboto, system-ui, 'Helvetica Neue', Arial;
   margin: 0;
@@ -110,7 +122,8 @@ body {
 
 .sub {
   color: var(--muted);
-  margin-top: 6px
+  margin-top: 6px;
+  text-align: start;
 }
 
 .card {
@@ -370,17 +383,36 @@ label.import-label {
 
   .nav-toggle {
     display: block;
-    margin-bottom: 8px
+    margin-top: 8px;
+    background-color: var(--accent);
+    color: white;
+    border-radius: 8px 0px 0px 8px;
   }
 
   .nav-dropdown {
-    display: block;
-    position: relative
+    display: flex;
+    position: relative;
   }
 
   .nav-select {
-    display: block;
-    margin-bottom: 8px
+    display: none;
+    margin-bottom: 8px;
+    position: fixed;
+    border: 2px solid var(--muted);
+    left: 0;
+    top: 0;
+    height: 100vh;
+    width: 60%;
+    border-top-right-radius: 8px;
+    border-top-left-radius: 0px;
+    list-style: none;
+    padding: 20px;
+    z-index: 20;
+  }
+  .nav-select button{
+    border-radius: 6px;
+    margin: 16px 0px 0px 20px;
+    border-radius: 8px 0px 0px 8px;
   }
 
   .nav-list {
@@ -396,11 +428,6 @@ label.import-label {
     right: 0;
     z-index: 10
   }
-
-  .nav-list.open {
-    display: flex
-  }
-
   .nav-list li {
     border-bottom: 1px solid var(--glass)
   }

@@ -732,10 +732,28 @@ document.addEventListener('click', (e)=>{
     if (page === 'tags') loadTags();
   }
 });
-
+let nav = document.getElementById("nav-toggle")
+let navList = document.getElementById("nav-select")
 let warna = document.getElementById("warna")
 let warna2 = document.getElementById("warna2")
 // Perubahan Tombol by azka
+nav.addEventListener("click" ,function(){
+  if(navList.style.display === "block"){
+    navList.classList.add("animate__fadeOutLeft")
+    setTimeout(function(){
+     navList.style.display = "none"
+     navList.classList.remove("animate__fadeOutLeft")
+    },1000)
+  }else{
+    navList.style.display = "block"
+    navList.classList.add("animate__fadeInLeft")
+    setTimeout(function(){
+      navList.classList.remove("animate__fadeInLeft")
+    },1000)
+  }
+})
+
+
 warna.addEventListener("click" ,function(){
   if(warna.style.background === "var(--success)"){
     warna.style.background = "var(--accent)"
